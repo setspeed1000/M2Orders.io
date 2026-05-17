@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M² — 3D Printing Service</title>
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+.nav { background: white; border-bottom: 0.5px solid #e0e0e0; padding: 1.5rem 2rem; display: flex; gap: 3rem; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.nav-brand { font-size: 24px; font-weight: 500; letter-spacing: -0.5px; }
+.nav button { background: none; border: none; padding: 10px 14px; cursor: pointer; font-size: 15px; color: #666; border-radius: 8px; transition: all 0.2s; }
+.nav button:hover { color: #1a1a1a; background: #f0f0f0; }
+.nav button.active { background: #f0f0f0; color: #1a1a1a; font-weight: 500; }
+.container { max-width: 1000px; margin: 0 auto; padding: 3rem 2rem; }
+.hero { text-align: center; margin-bottom: 4rem; }
+.hero h1 { font-size: 36px; margin-bottom: 1rem; font-weight: 500; }
+.hero p { font-size: 17px; color: #666; line-height: 1.6; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 3rem; }
+.metric-card { background: #f9f9f9; padding: 1.5rem; border-radius: 12px; text-align: center; border: 0.5px solid #e0e0e0; }
+.metric-label { font-size: 13px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-value { font-size: 32px; font-weight: 500; }
+.card { background: white; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+h2 { font-size: 22px; margin-bottom: 1.5rem; font-weight: 500; }
+h3 { font-size: 16px; margin-bottom: 1rem; font-weight: 500; }
+.form-group { margin-bottom: 1.5rem; }
+label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #1a1a1a; }
+input, select, textarea { width: 100%; padding: 10px 12px; border: 0.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #378add; box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1); }
+button { background: transparent; border: 0.5px solid #d0d0d0; padding: 11px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #1a1a1a; transition: all 0.2s; }
+button:hover:not(:disabled) { background: #f0f0f0; border-color: #d0d0d0; }
+button:active:not(:disabled) { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: #378add; color: white; border-color: #378add; }
+button.primary:hover:not(:disabled) { background: #2668a4; }
+.checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+.checkbox-group label { display: flex; align-items: center; margin: 0; font-weight: normal; cursor: pointer; }
+.checkbox-group input[type="radio"], .checkbox-group input[type="checkbox"] { width: auto; margin-right: 10px; cursor: pointer; }
+.help-text { font-size: 13px; color: #666; margin-top: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 14px; border-bottom: 0.5px solid #e0e0e0; font-weight: 500; background: #f9f9f9; }
+td { padding: 14px; border-bottom: 0.5px solid #e0e0e0; }
+.features-list { list-style: none; }
+.features-list li { padding: 0.75rem 0; color: #666; line-height: 1.6; }
+.features-list li:before { content: "→ "; color: #1a1a1a; font-weight: 500; margin-right: 8px; }
+.hidden { display: none; }
+.login-container { display: flex; align-items: center; justify-content: center; min-height: 500px; }
+.login-card { background: white; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 3rem; width: 100%; max-width: 380px; }
+.login-card h2 { text-align: center; margin-bottom: 2rem; }
+[data-fs-error] { color: #e24b4a; font-size: 12px; margin-top: 4px; display: none; }
+[data-fs-error]:not(:empty) { display: block; }
+[data-fs-success] { background: #f0f9f6; color: #0b6e47; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; display: none; border: 0.5px solid #5dcaa5; }
+[data-fs-success]:not(:empty) { display: block; }
+.filament-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 2rem; }
+.filament-card { background: #f9f9f9; padding: 1.5rem; border-radius: 12px; border: 0.5px solid #e0e0e0; }
+.filament-card strong { display: block; margin-bottom: 8px; color: #1a1a1a; }
+.filament-card p { font-size: 13px; color: #666; margin: 0; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } .nav { flex-direction: column; align-items: flex-start; gap: 1rem; } }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">M²</div>
+  <button class="nav-btn active" data-page="home">Home</button>
+  <button class="nav-btn" data-page="order">Order</button>
+  <button class="nav-btn" data-page="admin">Admin</button>
+</div>
+
+<div class="container">
+  <div id="home" class="page">
+    <div class="hero">
+      <h1>M² 3D Printing</h1>
+      <p>Custom 3D printing for parts, brackets, miniatures, and prototypes. Fair pricing, fast turnaround, honest work.</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Starting at</div>
+        <div class="metric-value">$7</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Turnaround</div>
+        <div class="metric-value">3-5 days</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Design help</div>
+        <div class="metric-value">$2</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Quality</div>
+        <div class="metric-value">A+</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>How it works</h2>
+      <ul class="features-list">
+        <li>Submit your file or describe what you need</li>
+        <li>Choose your filament and finish (painted or unpainted)</li>
+        <li>We slice your file and email you a quote</li>
+        <li>Pay and your print goes into the queue</li>
+        <li>Receive your part in 3–5 days</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Materials</h2>
+      <div class="filament-cards" id="filament-display"></div>
+    </div>
+  </div>
+
+  <div id="order" class="page hidden">
+    <div style="max-width: 700px; margin: 0 auto;">
+      <h1 style="text-align: center; margin-bottom: 0.5rem;">Place an order</h1>
+      <p style="text-align: center; color: #666; margin-bottom: 2rem;">Fill out this form and we'll get back to you with a quote</p>
+
+      <div class="card">
+        <div data-fs-success></div>
+        
+        <form id="order-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="order-email">Email <span style="color: #e24b4a;">*</span></label>
+              <input type="email" id="order-email" name="email" placeholder="you@example.com" data-fs-field required />
+              <span data-fs-error="email"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="order-name">Name <span style="color: #e24b4a;">*</span></label>
+              <input type="text" id="order-name" name="name" placeholder="Your name" data-fs-field required />
+              <span data-fs-error="name"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>File source <span style="color: #e24b4a;">*</span></label>
+            <div class="checkbox-group">
+              <label>
+                <input type="radio" name="file_source" value="upload" checked />
+                I have an STL/OBJ file
+              </label>
+              <label>
+                <input type="radio" name="file_source" value="design" />
+                You design it for me (+$2)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="upload-group">
+            <label for="order-file">Upload file</label>
+            <input type="file" id="order-file" accept=".stl,.obj,.3mf" />
+            <p class="help-text">STL, OBJ, or 3MF format</p>
+          </div>
+
+          <div class="form-group hidden" id="design-group">
+            <label for="design-description">Describe your design</label>
+            <textarea id="design-description" name="design_description" rows="4" placeholder="What do you want printed? Include dimensions, features, materials..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="order-filament">Filament <span style="color: #e24b4a;">*</span></label>
+            <select id="order-filament" name="filament" data-fs-field required>
+              <option value="">Choose a filament</option>
+            </select>
+            <span data-fs-error="filament"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Finish</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="radio" name="finish" value="unpainted" checked />
+                Unpainted (as printed)
+              </label>
+              <label>
+                <input type="radio" name="finish" value="painted" />
+                Hand-painted (+$5)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="order-dimensions">Estimated dimensions (mm)</label>
+            <input type="text" id="order-dimensions" name="dimensions" placeholder="e.g., 100 x 50 x 25" data-fs-field />
+            <p class="help-text">Length × width × height</p>
+          </div>
+
+          <div class="form-group">
+            <label>Delivery</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="rush" value="yes" />
+                Rush delivery — next day (+30%)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="order-notes">Notes</label>
+            <textarea id="order-notes" name="notes" rows="3" placeholder="Color preference, assembly requirements, etc."></textarea>
+          </div>
+
+          <button type="submit" class="primary" data-fs-submit-btn style="width: 100%; padding: 12px; font-size: 15px;">Get a quote</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin" class="page hidden">
+    <div id="admin-login" class="login-container">
+      <div class="login-card">
+        <h2>Admin access</h2>
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" placeholder="Enter password" />
+        </div>
+        <button class="primary" onclick="checkAdminPassword()" style="width: 100%; padding: 11px;">Sign in</button>
+      </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Admin panel</h1>
+        <button onclick="logoutAdmin()">Logout</button>
+      </div>
+      
+      <div class="card">
+        <h2>Filament inventory</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Cost/kg</th>
+              <th>Multiplier</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="admin-filament-list"></tbody>
+        </table>
+        <button onclick="addFilament()" style="margin-top: 1.5rem;">+ Add filament</button>
+      </div>
+
+      <div class="card hidden" id="filament-form-card">
+        <h2>Add/edit filament</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-name">Name</label>
+            <input type="text" id="form-name" placeholder="e.g., Standard PLA" />
+          </div>
+          <div class="form-group">
+            <label for="form-cost">Cost per kg ($)</label>
+            <input type="number" id="form-cost" placeholder="25" step="0.50" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-multiplier">Multiplier</label>
+            <input type="number" id="form-multiplier" placeholder="1.05" step="0.01" />
+            <p class="help-text">1.0 = base, 1.15 = 15% premium</p>
+          </div>
+          <div class="form-group">
+            <label for="form-notes">Notes</label>
+            <input type="text" id="form-notes" placeholder="e.g., Flexible, glow-in-dark" />
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="primary" onclick="saveFilament()">Save</button>
+          <button onclick="cancelFilament()">Cancel</button>
+          <button class="danger" id="delete-btn" style="display: none; color: #e24b4a; border-color: #e24b4a;" onclick="deleteFilament()">Delete</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Pricing</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+          <div class="form-group">
+            <label for="labor-rate">Your hourly rate ($)</label>
+            <input type="number" id="labor-rate" value="20" />
+          </div>
+          <div class="form-group">
+            <label for="overhead-rate">Overhead per hour ($)</label>
+            <input type="number" id="overhead-rate" value="2.50" step="0.25" />
+          </div>
+          <div class="form-group">
+            <label for="design-fee">Design fee ($)</label>
+            <input type="number" id="design-fee" value="2" />
+          </div>
+          <div class="form-group">
+            <label for="rush-multiplier">Rush multiplier</label>
+            <input type="number" id="rush-multiplier" value="1.30" step="0.05" />
+          </div>
+        </div>
+        <button class="primary" onclick="savePricing()" style="margin-top: 1rem;">Save settings</button>
+      </div>
+
+      <div class="card">
+        <h2>Orders</h2>
+        <p style="font-size: 14px; color: #666; margin-bottom: 1.5rem;">All orders are sent to your Formspree account. Check your email for submissions.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
+<script>
+const ADMIN_PASSWORD = 'neighneighbitch1@';
+
+const DEFAULT_FILAMENTS = [
+  { name: 'Standard PLA', cost: 25, multiplier: 1.05, notes: 'All colors' },
+  { name: 'PETG', cost: 30, multiplier: 1.15, notes: 'Impact-resistant' },
+  { name: 'Flexible (TPU)', cost: 40, multiplier: 1.3, notes: 'Bendy parts' },
+  { name: 'Carbon-filled', cost: 35, multiplier: 1.25, notes: 'Lightweight' },
+];
+
+const DEFAULT_PRICING = {
+  laborRate: 20,
+  overheadRate: 2.50,
+  designFee: 2,
+  rushMultiplier: 1.30,
+};
+
+let filaments = JSON.parse(localStorage.getItem('filaments')) || DEFAULT_FILAMENTS;
+let pricing = JSON.parse(localStorage.getItem('pricing')) || DEFAULT_PRICING;
+let adminLoggedIn = false;
+let currentFilamentIndex = null;
+
+function saveToStorage() {
+  localStorage.setItem('filaments', JSON.stringify(filaments));
+  localStorage.setItem('pricing', JSON.stringify(pricing));
+}
+
+function renderFilamentDisplay() {
+  const display = document.getElementById('filament-display');
+  display.innerHTML = filaments.map(f => `
+    <div class="filament-card">
+      <strong>${f.name}</strong>
+      <p>$${f.cost.toFixed(2)}/kg</p>
+      ${f.notes ? `<p>${f.notes}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderOrderSelect() {
+  const select = document.getElementById('order-filament');
+  select.innerHTML = '<option value="">Choose a filament</option>' + filaments.map(f => `
+    <option value="${f.name}">${f.name} · $${f.cost.toFixed(2)}/kg</option>
+  `).join('');
+}
+
+function renderAdminFilaments() {
+  const tbody = document.getElementById('admin-filament-list');
+  tbody.innerHTML = filaments.map((f, i) => `
+    <tr>
+      <td>${f.name}</td>
+      <td>$${f.cost.toFixed(2)}</td>
+      <td>${f.multiplier.toFixed(2)}x</td>
+      <td style="font-size: 13px; color: #666;">${f.notes || ''}</td>
+      <td><button onclick="editFilament(${i})" style="width: 60px; font-size: 13px;">Edit</button></td>
+    </tr>
+  `).join('');
+}
+
+function loadPricingSettings() {
+  document.getElementById('labor-rate').value = pricing.laborRate;
+  document.getElementById('overhead-rate').value = pricing.overheadRate;
+  document.getElementById('design-fee').value = pricing.designFee;
+  document.getElementById('rush-multiplier').value = pricing.rushMultiplier;
+}
+
+function checkAdminPassword() {
+  const password = document.getElementById('admin-password').value;
+  if (password === ADMIN_PASSWORD) {
+    adminLoggedIn = true;
+    document.getElementById('admin-login').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    document.getElementById('admin-password').value = '';
+    renderAdminFilaments();
+    loadPricingSettings();
+  } else {
+    alert('Incorrect password');
+  }
+}
+
+function logoutAdmin() {
+  adminLoggedIn = false;
+  document.getElementById('admin-login').classList.remove('hidden');
+  document.getElementById('admin-panel').classList.add('hidden');
+}
+
+function addFilament() {
+  currentFilamentIndex = null;
+  document.getElementById('form-name').value = '';
+  document.getElementById('form-cost').value = '25';
+  document.getElementById('form-multiplier').value = '1.05';
+  document.getElementById('form-notes').value = '';
+  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('filament-form-card').classList.remove('hidden');
+}
+
+function editFilament(i) {
+  currentFilamentIndex = i;
+  const f = filaments[i];
+  document.getElementById('form-name').value = f.name;
+  document.getElementById('form-cost').value = f.cost;
+  document.getElementById('form-multiplier').value = f.multiplier;
+  document.getElementById('form-notes').value = f.notes;
+  document.getElementById('delete-btn').style.display = 'block';
+  document.getElementById('filament-form-card').classList.remove('hidden');
+}
+
+function saveFilament() {
+  const name = document.getElementById('form-name').value;
+  const cost = parseFloat(document.getElementById('form-cost').value);
+  const multiplier = parseFloat(document.getElementById('form-multiplier').value);
+  const notes = document.getElementById('form-notes').value;
+
+  if (!name || !cost || !multiplier) {
+    alert('Fill in all required fields');
+    return;
+  }
+
+  if (currentFilamentIndex === null) {
+    filaments.push({ name, cost, multiplier, notes });
+  } else {
+    filaments[currentFilamentIndex] = { name, cost, multiplier, notes };
+  }
+  
+  saveToStorage();
+  renderAdminFilaments();
+  renderOrderSelect();
+  renderFilamentDisplay();
+  cancelFilament();
+}
+
+function deleteFilament() {
+  if (confirm('Delete this filament?')) {
+    filaments.splice(currentFilamentIndex, 1);
+    saveToStorage();
+    renderAdminFilaments();
+    renderOrderSelect();
+    renderFilamentDisplay();
+    cancelFilament();
+  }
+}
+
+function cancelFilament() {
+  document.getElementById('filament-form-card').classList.add('hidden');
+}
+
+function savePricing() {
+  pricing.laborRate = parseFloat(document.getElementById('labor-rate').value);
+  pricing.overheadRate = parseFloat(document.getElementById('overhead-rate').value);
+  pricing.designFee = parseFloat(document.getElementById('design-fee').value);
+  pricing.rushMultiplier = parseFloat(document.getElementById('rush-multiplier').value);
+  saveToStorage();
+  alert('Pricing updated');
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    if (e.target.dataset.page === 'admin' && !adminLoggedIn) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      e.target.classList.add('active');
+      document.getElementById('admin').classList.remove('hidden');
+      return;
+    }
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    e.target.classList.add('active');
+    document.getElementById(e.target.dataset.page).classList.remove('hidden');
+  });
+});
+
+document.querySelectorAll('input[name="file_source"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    document.getElementById('upload-group').classList.toggle('hidden', e.target.value === 'design');
+    document.getElementById('design-group').classList.toggle('hidden', e.target.value === 'upload');
+  });
+});
+
+document.getElementById('admin-password').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') checkAdminPassword();
+});
+
+window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+formspree('initForm', { formElement: '#order-form', formId: 'xojbqarj' });
+
+renderFilamentDisplay();
+renderOrderSelect();
+</script>
+
+</body>
+</html>
