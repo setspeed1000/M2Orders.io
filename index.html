@@ -199,16 +199,16 @@ label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
             <label>Delivery</label>
             <div id="delivery-options" class="checkbox-group">
               <label>
-                <input type="radio" name="delivery" value="standard" checked />
+                <input type="checkbox" id="delivery-standard" name="standard" value="yes" />
                 Standard — 3–5 days
               </label>
               <label>
-                <input type="radio" name="delivery" value="rush" />
+                <input type="checkbox" id="delivery-rush" name="rush" value="yes" />
                 Rush — next day (+30%)
               </label>
             </div>
             <div id="backorder-delivery-notice" style="background: #fff3f3; border: 0.5px solid #e24b4a; color: #e24b4a; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; display: none;">
-              ⏳ Backordered items: 5 days upon arrival of filament + processing time
+              ⏳ Backordered items: 3–5 days upon reception of filament
             </div>
           </div>
 
@@ -486,7 +486,7 @@ function updateFilamentWarning() {
   const select = document.getElementById('order-filament');
   const warning = document.getElementById('filament-warning');
   const backorderNotice = document.getElementById('backorder-delivery-notice');
-  const deliveryOptions = document.querySelectorAll('#delivery-options input[type="radio"]');
+  const deliveryOptions = document.querySelectorAll('#delivery-options input[type="checkbox"]');
   const selectedName = select.value;
 
   if (!selectedName) {
