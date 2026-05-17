@@ -358,24 +358,35 @@ function parseCSV(csv) {
   }
 
   const headers = rows[0].map(h => h.toLowerCase().trim());
-  const nameIdx = headers.indexOf('name');
-  const costIdx = headers.indexOf('cost');
-  const multiplierIdx = headers.indexOf('multiplier');
-  const notesIdx = headers.indexOf('notes');
+
+  const nameIdx = findColumnIndex(headers, ['name', 'filament', 'filament type', 'type']);
+  const costIdx = findColumnIndex(headers, ['cost', 'cost/kg', 'cost per kg', 'price']);
+  const multiplierIdx = findColumnIndex(headers, ['multiplier', 'price multiplier', 'multiplier']);
+  const colorIdx = findColumnIndex(headers, ['color']);
 
   if (nameIdx === -1 || costIdx === -1 || multiplierIdx === -1) {
-    console.warn('Invalid CSV headers. Expected: name, cost, multiplier, notes. Found:', headers);
+    console.warn('Invalid CSV headers. Expected filament name, cost, and multiplier. Found:', headers);
     return DEFAULT_FILAMENTS;
   }
 
   return rows.slice(1).map(parts => {
-    return {
-      name: (parts[nameIdx] || '').trim(),
-      cost: parseFloat(parts[costIdx]) || 0,
-      multiplier: parseFloat(parts[multiplierIdx]) || 1.0,
-      notes: notesIdx !== -1 ? (parts[notesIdx] || '').trim() : ''
-    };
+    const name = (parts[nameIdx] || '').trim();
+    const color = colorIdx !== -1 ? (parts[colorIdx] || '').trim() : '';
+    const cost = parseFloat(parts[costIdx]) || 0;
+    const multiplier = parseFloat(parts[multiplierIdx]) || 1.0;
+
+    const notes = color ? color : '';
+
+    return { name, cost, multiplier, notes };
   }).filter(f => f.name && f.cost > 0);
+}
+
+function findColumnIndex(headers, possibleNames) {
+  for (const name of possibleNames) {
+    const idx = headers.findIndex(h => h.includes(name.toLowerCase()));
+    if (idx !== -1) return idx;
+  }
+  return -1;
 }
 
 function parseCSVRows(csv) {
