@@ -480,14 +480,20 @@ function updateFilamentWarning() {
 
   if (!selectedName) {
     warning.style.display = 'none';
+    select.style.borderColor = '#e0e0e0';
+    select.style.backgroundColor = 'white';
     return;
   }
 
   const filament = filaments.find(f => f.name === selectedName);
   if (filament && !filament.inStock) {
     warning.style.display = 'block';
+    select.style.borderColor = '#e24b4a';
+    select.style.backgroundColor = '#fff5f5';
   } else {
     warning.style.display = 'none';
+    select.style.borderColor = '#e0e0e0';
+    select.style.backgroundColor = 'white';
   }
 }
 
