@@ -140,28 +140,11 @@ label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
           </div>
 
           <div class="form-group">
-            <label>File source <span style="color: #e24b4a;">*</span></label>
-            <div class="checkbox-group">
-              <label>
-                <input type="radio" name="file_source" value="upload" checked />
-                I have an STL/OBJ file
-              </label>
-              <label>
-                <input type="radio" name="file_source" value="design" />
-                You design it for me (+$2)
-              </label>
-            </div>
-          </div>
-
-          <div class="form-group" id="upload-group">
-            <label for="order-file">Upload file</label>
-            <input type="file" id="order-file" accept=".stl,.obj,.3mf" />
-            <p class="help-text">STL, OBJ, or 3MF format</p>
-          </div>
-
-          <div class="form-group hidden" id="design-group">
-            <label for="design-description">Describe your design</label>
-            <textarea id="design-description" name="design_description" rows="4" placeholder="What do you want printed? Include dimensions, features, materials..."></textarea>
+            <label style="display: flex; align-items: center; margin: 0; font-weight: normal; cursor: pointer;">
+              <input type="checkbox" name="has_file" value="yes" style="width: auto; margin-right: 10px; cursor: pointer;" />
+              I have a file to upload
+            </label>
+            <p class="help-text" style="margin-top: 6px;">You can email your STL/OBJ file to us, or we can design it for you (+$2)</p>
           </div>
 
           <div class="form-group">
@@ -659,12 +642,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-document.querySelectorAll('input[name="file_source"]').forEach(radio => {
-  radio.addEventListener('change', (e) => {
-    document.getElementById('upload-group').classList.toggle('hidden', e.target.value === 'design');
-    document.getElementById('design-group').classList.toggle('hidden', e.target.value === 'upload');
-  });
-});
 
 document.getElementById('admin-password').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') checkAdminPassword();
@@ -677,6 +654,7 @@ async function initializeApp() {
   filaments = await fetchFilamentsFromSheets();
   renderFilamentDisplay();
   renderOrderSelect();
+  updateFilamentWarning();
 }
 
 initializeApp();
