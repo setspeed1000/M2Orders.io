@@ -47,6 +47,8 @@ td { padding: 14px; border-bottom: 0.5px solid #e0e0e0; }
 .hidden { display: none; }
 a { color: #378add; text-decoration: none; }
 a:hover { text-decoration: underline; }
+input[type="radio"]:disabled, input[type="checkbox"]:disabled { opacity: 0.5; cursor: not-allowed; }
+label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .login-container { display: flex; align-items: center; justify-content: center; min-height: 500px; }
 .login-card { background: white; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 3rem; width: 100%; max-width: 380px; }
 .login-card h2 { text-align: center; margin-bottom: 2rem; }
@@ -195,11 +197,18 @@ a:hover { text-decoration: underline; }
 
           <div class="form-group">
             <label>Delivery</label>
-            <div class="checkbox-group">
+            <div id="delivery-options" class="checkbox-group">
               <label>
-                <input type="checkbox" name="rush" value="yes" />
-                Rush delivery — next day (+30%)
+                <input type="radio" name="delivery" value="standard" checked />
+                Standard — 3–5 days
               </label>
+              <label>
+                <input type="radio" name="delivery" value="rush" />
+                Rush — next day (+30%)
+              </label>
+            </div>
+            <div id="backorder-delivery-notice" style="background: #fff3f3; border: 0.5px solid #e24b4a; color: #e24b4a; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; display: none;">
+              ⏳ Backordered items: 5 days upon arrival of filament + processing time
             </div>
           </div>
 
@@ -476,24 +485,32 @@ function renderOrderSelect() {
 function updateFilamentWarning() {
   const select = document.getElementById('order-filament');
   const warning = document.getElementById('filament-warning');
+  const backorderNotice = document.getElementById('backorder-delivery-notice');
+  const deliveryOptions = document.querySelectorAll('#delivery-options input[type="radio"]');
   const selectedName = select.value;
 
   if (!selectedName) {
     warning.style.display = 'none';
+    backorderNotice.style.display = 'none';
     select.style.borderColor = '#e0e0e0';
     select.style.backgroundColor = 'white';
+    deliveryOptions.forEach(opt => opt.disabled = false);
     return;
   }
 
   const filament = filaments.find(f => f.name === selectedName);
   if (filament && !filament.inStock) {
     warning.style.display = 'block';
+    backorderNotice.style.display = 'block';
     select.style.borderColor = '#e24b4a';
     select.style.backgroundColor = '#fff5f5';
+    deliveryOptions.forEach(opt => opt.disabled = true);
   } else {
     warning.style.display = 'none';
+    backorderNotice.style.display = 'none';
     select.style.borderColor = '#e0e0e0';
     select.style.backgroundColor = 'white';
+    deliveryOptions.forEach(opt => opt.disabled = false);
   }
 }
 
