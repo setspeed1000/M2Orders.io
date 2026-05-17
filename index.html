@@ -164,10 +164,13 @@ a:hover { text-decoration: underline; }
 
           <div class="form-group">
             <label for="order-filament">Filament <span style="color: #e24b4a;">*</span></label>
-            <select id="order-filament" name="filament" data-fs-field required>
+            <select id="order-filament" name="filament" data-fs-field required onchange="updateFilamentWarning()">
               <option value="">Choose a filament</option>
             </select>
             <span data-fs-error="filament"></span>
+            <div id="filament-warning" style="background: #fff3f3; border: 0.5px solid #e24b4a; color: #e24b4a; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 13px; display: none;">
+              ⚠ This filament is currently backordered. We'll notify you once it ships.
+            </div>
           </div>
 
           <div class="form-group">
@@ -466,8 +469,26 @@ function renderFilamentDisplay() {
 function renderOrderSelect() {
   const select = document.getElementById('order-filament');
   select.innerHTML = '<option value="">Choose a filament</option>' + filaments.map(f => `
-    <option value="${f.name}" style="${!f.inStock ? 'color: #e24b4a;' : ''}">${f.name} · $${f.cost.toFixed(2)}/kg${!f.inStock ? ' (Backordered)' : ''}</option>
+    <option value="${f.name}">${f.name} · $${f.cost.toFixed(2)}/kg${!f.inStock ? ' (Backordered)' : ''}</option>
   `).join('');
+}
+
+function updateFilamentWarning() {
+  const select = document.getElementById('order-filament');
+  const warning = document.getElementById('filament-warning');
+  const selectedName = select.value;
+
+  if (!selectedName) {
+    warning.style.display = 'none';
+    return;
+  }
+
+  const filament = filaments.find(f => f.name === selectedName);
+  if (filament && !filament.inStock) {
+    warning.style.display = 'block';
+  } else {
+    warning.style.display = 'none';
+  }
 }
 
 function renderAdminFilaments() {
