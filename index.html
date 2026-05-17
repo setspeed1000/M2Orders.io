@@ -140,11 +140,17 @@ label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
           </div>
 
           <div class="form-group">
-            <label style="display: flex; align-items: center; margin: 0; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" name="has_file" value="yes" style="width: auto; margin-right: 10px; cursor: pointer;" />
-              I have a file to upload
-            </label>
-            <p class="help-text" style="margin-top: 6px;">You can email your STL/OBJ file to us, or we can design it for you (+$2)</p>
+            <label>File <span style="color: #e24b4a;">*</span></label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="file_option" value="upload" class="file-option" />
+                I have a file to upload
+              </label>
+              <label>
+                <input type="checkbox" name="file_option" value="design" class="file-option" />
+                You design it for me (+$2)
+              </label>
+            </div>
           </div>
 
           <div class="form-group">
@@ -182,11 +188,11 @@ label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
             <label>Delivery</label>
             <div id="delivery-options" class="checkbox-group">
               <label>
-                <input type="checkbox" id="delivery-standard" name="standard" value="yes" />
+                <input type="checkbox" name="delivery_option" value="standard" class="delivery-option" />
                 Standard — 3–5 days
               </label>
               <label>
-                <input type="checkbox" id="delivery-rush" name="rush" value="yes" />
+                <input type="checkbox" name="delivery_option" value="rush" class="delivery-option" />
                 Rush — next day (+30%)
               </label>
             </div>
@@ -469,7 +475,7 @@ function updateFilamentWarning() {
   const select = document.getElementById('order-filament');
   const warning = document.getElementById('filament-warning');
   const backorderNotice = document.getElementById('backorder-delivery-notice');
-  const deliveryOptions = document.querySelectorAll('#delivery-options input[type="checkbox"]');
+  const deliveryOptions = document.querySelectorAll('.delivery-option');
   const selectedName = select.value;
 
   if (!selectedName) {
@@ -477,7 +483,11 @@ function updateFilamentWarning() {
     backorderNotice.style.display = 'none';
     select.style.borderColor = '#e0e0e0';
     select.style.backgroundColor = 'white';
-    deliveryOptions.forEach(opt => opt.disabled = false);
+    deliveryOptions.forEach(opt => {
+      opt.disabled = false;
+      opt.parentElement.style.opacity = '1';
+      opt.parentElement.style.cursor = 'pointer';
+    });
     return;
   }
 
@@ -487,13 +497,21 @@ function updateFilamentWarning() {
     backorderNotice.style.display = 'block';
     select.style.borderColor = '#e24b4a';
     select.style.backgroundColor = '#fff5f5';
-    deliveryOptions.forEach(opt => opt.disabled = true);
+    deliveryOptions.forEach(opt => {
+      opt.disabled = true;
+      opt.parentElement.style.opacity = '0.5';
+      opt.parentElement.style.cursor = 'not-allowed';
+    });
   } else {
     warning.style.display = 'none';
     backorderNotice.style.display = 'none';
     select.style.borderColor = '#e0e0e0';
     select.style.backgroundColor = 'white';
-    deliveryOptions.forEach(opt => opt.disabled = false);
+    deliveryOptions.forEach(opt => {
+      opt.disabled = false;
+      opt.parentElement.style.opacity = '1';
+      opt.parentElement.style.cursor = 'pointer';
+    });
   }
 }
 
@@ -645,6 +663,26 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
 document.getElementById('admin-password').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') checkAdminPassword();
+});
+
+document.querySelectorAll('.file-option').forEach(checkbox => {
+  checkbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      document.querySelectorAll('.file-option').forEach(cb => {
+        if (cb !== e.target) cb.checked = false;
+      });
+    }
+  });
+});
+
+document.querySelectorAll('.delivery-option').forEach(checkbox => {
+  checkbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      document.querySelectorAll('.delivery-option').forEach(cb => {
+        if (cb !== e.target) cb.checked = false;
+      });
+    }
+  });
 });
 
 window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
