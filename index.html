@@ -387,7 +387,7 @@ function parseCSV(csv) {
     const cost = parseFloat(parts[costIdx]) || 0;
     const multiplier = parseFloat(parts[multiplierIdx]) || 1.0;
     const stockRaw = stockIdx !== -1 ? (parts[stockIdx] || '').trim().toLowerCase() : 'yes';
-    const inStock = stockRaw === 'yes' || stockRaw === 'true' || stockRaw === '1';
+    const inStock = stockRaw !== 'no' && stockRaw !== 'false' && stockRaw !== '0' && stockRaw !== '';
 
     const notes = color ? color : '';
 
