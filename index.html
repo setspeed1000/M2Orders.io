@@ -45,6 +45,8 @@ td { padding: 14px; border-bottom: 0.5px solid #e0e0e0; }
 .features-list li { padding: 0.75rem 0; color: #666; line-height: 1.6; }
 .features-list li:before { content: "→ "; color: #1a1a1a; font-weight: 500; margin-right: 8px; }
 .hidden { display: none; }
+a { color: #378add; text-decoration: none; }
+a:hover { text-decoration: underline; }
 .login-container { display: flex; align-items: center; justify-content: center; min-height: 500px; }
 .login-card { background: white; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 3rem; width: 100%; max-width: 380px; }
 .login-card h2 { text-align: center; margin-bottom: 2rem; }
@@ -228,7 +230,11 @@ td { padding: 14px; border-bottom: 0.5px solid #e0e0e0; }
       </div>
       
       <div class="card">
-        <h2>Filament inventory</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0;">Filament inventory</h2>
+          <button onclick="refreshFilamentsFromSheet()" style="font-size: 13px;">↻ Refresh from sheet</button>
+        </div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 1rem;">Filaments are loaded from <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRKH8LkreofvJ7P55WVOKwMpkgCif0jzXZ-aSuX71mrW_efORDSckWDozIuz-5P-Ql78_HVlLV9e7Vz/edit" target="_blank" style="color: #378add;">Google Sheets</a>. Edit the sheet directly to update filaments, or use the form below to make temporary local changes.</p>
         <table>
           <thead>
             <tr>
@@ -241,7 +247,7 @@ td { padding: 14px; border-bottom: 0.5px solid #e0e0e0; }
           </thead>
           <tbody id="admin-filament-list"></tbody>
         </table>
-        <button onclick="addFilament()" style="margin-top: 1.5rem;">+ Add filament</button>
+        <button onclick="addFilament()" style="margin-top: 1.5rem;">+ Add filament (local)</button>
       </div>
 
       <div class="card hidden" id="filament-form-card">
@@ -323,13 +329,51 @@ const DEFAULT_PRICING = {
   rushMultiplier: 1.30,
 };
 
-let filaments = JSON.parse(localStorage.getItem('filaments')) || DEFAULT_FILAMENTS;
+const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKH8LkreofvJ7P55WVOKwMpkgCif0jzXZ-aSuX71mrW_efORDSckWDozIuz-5P-Ql78_HVlLV9e7Vz/pub?output=csv';
+
+let filaments = [];
 let pricing = JSON.parse(localStorage.getItem('pricing')) || DEFAULT_PRICING;
 let adminLoggedIn = false;
 let currentFilamentIndex = null;
 
+async function fetchFilamentsFromSheets() {
+  try {
+    const response = await fetch(SHEETS_CSV_URL);
+    const csv = await response.text();
+    return parseCSV(csv);
+  } catch (error) {
+    console.error('Failed to fetch filaments from Google Sheets:', error);
+    return DEFAULT_FILAMENTS;
+  }
+}
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return DEFAULT_FILAMENTS;
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const nameIdx = headers.indexOf('name');
+  const costIdx = headers.indexOf('cost');
+  const multiplierIdx = headers.indexOf('multiplier');
+  const notesIdx = headers.indexOf('notes');
+
+  if (nameIdx === -1 || costIdx === -1 || multiplierIdx === -1) {
+    console.warn('Invalid CSV headers. Expected: name, cost, multiplier, notes');
+    return DEFAULT_FILAMENTS;
+  }
+
+  return lines.slice(1).map(line => {
+    const parts = line.split(',').map(p => p.trim());
+    return {
+      name: parts[nameIdx] || '',
+      cost: parseFloat(parts[costIdx]) || 0,
+      multiplier: parseFloat(parts[multiplierIdx]) || 1.0,
+      notes: notesIdx !== -1 ? (parts[notesIdx] || '') : ''
+    };
+  }).filter(f => f.name);
+}
+
 function saveToStorage() {
-  localStorage.setItem('filaments', JSON.stringify(filaments));
   localStorage.setItem('pricing', JSON.stringify(pricing));
 }
 
@@ -369,6 +413,22 @@ function loadPricingSettings() {
   document.getElementById('overhead-rate').value = pricing.overheadRate;
   document.getElementById('design-fee').value = pricing.designFee;
   document.getElementById('rush-multiplier').value = pricing.rushMultiplier;
+}
+
+async function refreshFilamentsFromSheet() {
+  try {
+    const newFilaments = await fetchFilamentsFromSheets();
+    if (newFilaments.length > 0) {
+      filaments = newFilaments;
+      renderAdminFilaments();
+      renderOrderSelect();
+      renderFilamentDisplay();
+      alert('Filaments refreshed from Google Sheets');
+    }
+  } catch (error) {
+    alert('Failed to refresh filaments');
+    console.error(error);
+  }
 }
 
 function checkAdminPassword() {
@@ -490,8 +550,13 @@ document.getElementById('admin-password').addEventListener('keypress', (e) => {
 window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
 formspree('initForm', { formElement: '#order-form', formId: 'xojbqarj' });
 
-renderFilamentDisplay();
-renderOrderSelect();
+async function initializeApp() {
+  filaments = await fetchFilamentsFromSheets();
+  renderFilamentDisplay();
+  renderOrderSelect();
+}
+
+initializeApp();
 </script>
 
 </body>
