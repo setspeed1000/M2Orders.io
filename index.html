@@ -340,7 +340,10 @@ async function fetchFilamentsFromSheets() {
   try {
     const response = await fetch(SHEETS_CSV_URL);
     const csv = await response.text();
-    return parseCSV(csv);
+    console.log('Fetched CSV:', csv.substring(0, 200));
+    const parsed = parseCSV(csv);
+    console.log('Parsed filaments:', parsed);
+    return parsed.length > 0 ? parsed : DEFAULT_FILAMENTS;
   } catch (error) {
     console.error('Failed to fetch filaments from Google Sheets:', error);
     return DEFAULT_FILAMENTS;
@@ -348,29 +351,89 @@ async function fetchFilamentsFromSheets() {
 }
 
 function parseCSV(csv) {
-  const lines = csv.trim().split('\n');
-  if (lines.length < 2) return DEFAULT_FILAMENTS;
-
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const nameIdx = headers.indexOf('name');
-  const costIdx = headers.indexOf('cost');
-  const multiplierIdx = headers.indexOf('multiplier');
-  const notesIdx = headers.indexOf('notes');
-
-  if (nameIdx === -1 || costIdx === -1 || multiplierIdx === -1) {
-    console.warn('Invalid CSV headers. Expected: name, cost, multiplier, notes');
+  const rows = parseCSVRows(csv);
+  if (rows.length < 2) {
+    console.warn('CSV has no data rows');
     return DEFAULT_FILAMENTS;
   }
 
-  return lines.slice(1).map(line => {
-    const parts = line.split(',').map(p => p.trim());
-    return {
-      name: parts[nameIdx] || '',
-      cost: parseFloat(parts[costIdx]) || 0,
-      multiplier: parseFloat(parts[multiplierIdx]) || 1.0,
-      notes: notesIdx !== -1 ? (parts[notesIdx] || '') : ''
-    };
-  }).filter(f => f.name);
+  const headers = rows[0].map(h => h.toLowerCase().trim());
+
+  const nameIdx = findColumnIndex(headers, ['name', 'filament', 'filament type', 'type']);
+  const costIdx = findColumnIndex(headers, ['cost', 'cost/kg', 'cost per kg', 'price']);
+  const multiplierIdx = findColumnIndex(headers, ['multiplier', 'price multiplier', 'multiplier']);
+  const colorIdx = findColumnIndex(headers, ['color']);
+
+  if (nameIdx === -1 || costIdx === -1 || multiplierIdx === -1) {
+    console.warn('Invalid CSV headers. Expected filament name, cost, and multiplier. Found:', headers);
+    return DEFAULT_FILAMENTS;
+  }
+
+  return rows.slice(1).map(parts => {
+    const name = (parts[nameIdx] || '').trim();
+    const color = colorIdx !== -1 ? (parts[colorIdx] || '').trim() : '';
+    const cost = parseFloat(parts[costIdx]) || 0;
+    const multiplier = parseFloat(parts[multiplierIdx]) || 1.0;
+
+    const notes = color ? color : '';
+
+    return { name, cost, multiplier, notes };
+  }).filter(f => f.name && f.cost > 0);
+}
+
+function findColumnIndex(headers, possibleNames) {
+  for (const name of possibleNames) {
+    const idx = headers.findIndex(h => h.includes(name.toLowerCase()));
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function parseCSVRows(csv) {
+  const rows = [];
+  let currentRow = [];
+  let currentField = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < csv.length; i++) {
+    const char = csv[i];
+    const nextChar = csv[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        currentField += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentField);
+      currentField = '';
+    } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField);
+        if (currentRow.some(f => f.trim())) {
+          rows.push(currentRow);
+        }
+        currentRow = [];
+        currentField = '';
+      }
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+    } else {
+      currentField += char;
+    }
+  }
+
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField);
+    if (currentRow.some(f => f.trim())) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
 }
 
 function saveToStorage() {
